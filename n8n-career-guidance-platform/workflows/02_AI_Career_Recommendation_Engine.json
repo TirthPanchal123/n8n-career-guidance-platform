@@ -1,0 +1,162 @@
+{
+  "name": "02_AI_Career_Recommendation_Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-ai-engine",
+        "options": {}
+      },
+      "name": "Webhook_Subworkflow_Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0ce3fb60-cccd-49ca-9643-20cd76f91b7c",
+      "webhookId": "4108d1e1-a230-4300-b824-fb8e80d888e1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const student = $input.first().json.body || $input.first().json;\n\nconst systemPrompt = `You are an expert AI Career Advisor & Technical Evaluator. Analyze student profiles and output structured JSON response with skill gap analysis, recommended role, 4-week roadmap, and target skills.`;\n\nconst userPrompt = `Student Profile:\\nName: ${student.fullName}\\nDegree: ${student.degree}\\nTarget Goal: ${student.targetGoal}\\nCurrent Skills: ${student.currentSkills}\\nWeekly Time: ${student.weeklyTime}\\n\\nProvide structured analysis in JSON format with keys:\\n1. recommendedRole\\n2. skillGap (array of 3-5 missing skills)\\n3. week1Roadmap\\n4. week2Roadmap\\n5. week3Roadmap\\n6. week4Roadmap\\n7. topProjectIdea`;\n\nreturn [{\n  json: {\n    student,\n    systemPrompt,\n    userPrompt\n  }\n}];"
+      },
+      "name": "Construct_AI_Prompts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f77715bd-c8ac-435c-98a7-1ca885172997"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4o-mini",
+        "prompt": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are an expert AI Career Advisor. Analyze student profiles and return JSON with: recommendedRole, skillGap (array), week1Roadmap, week2Roadmap, week3Roadmap, week4Roadmap, topProjectIdea"
+            },
+            {
+              "content": "={{ $json.userPrompt }}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.7
+        },
+        "requestOptions": {}
+      },
+      "name": "OpenAI_LLM_Recommendation",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "ffeb9541-f6f3-48fe-b2b3-0ebc56df2ef5",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const inputData = $input.all();\nconst rawStudent = $('Construct_AI_Prompts').first().json.student;\nlet aiText = '';\n\ntry {\n  aiText = inputData[0].json.message.content;\n} catch (e) {\n  aiText = JSON.stringify({\n    recommendedRole: rawStudent.targetGoal,\n    skillGap: ['Advanced Frameworks', 'Production Deployment', 'API Testing'],\n    week1Roadmap: 'Master core concepts and foundational syntax.',\n    week2Roadmap: 'Build hands-on projects and understand APIs.',\n    week3Roadmap: 'Learn database optimization & backend routing.',\n    week4Roadmap: 'Deploy capstone app to cloud (Vercel/AWS) and update portfolio.',\n    topProjectIdea: 'Full-Stack Dashboard with Authentication and AI Integration'\n  });\n}\n\nlet parsed = {};\ntry {\n  parsed = JSON.parse(aiText);\n} catch (err) {\n  parsed = {\n    recommendedRole: rawStudent.targetGoal,\n    skillGap: ['Advanced Frameworks', 'Cloud Deployment', 'Database Modeling'],\n    week1Roadmap: 'Week 1: Deep dive into core language & architecture',\n    week2Roadmap: 'Week 2: Backend APIs, Webhooks, and state management',\n    week3Roadmap: 'Week 3: Database design, ORM, and Async execution',\n    week4Roadmap: 'Week 4: Cloud deployment, CI/CD pipeline, and Portfolio build',\n    topProjectIdea: 'AI-Powered Automation Portal for Enterprise Workflows'\n  };\n}\n\nreturn [{\n  json: {\n    ...rawStudent,\n    aiAnalysis: parsed,\n    analyzedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Parse_AI_Structured_Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "8212c15f-0f2b-45d0-a49f-3cc6d21a2c2b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tirth30082006.app.n8n.cloud/webhook/trigger-course-matcher",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "name": "Trigger_Course_Matcher_Subworkflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "id": "afde409b-d36f-423c-aa88-7007baa1763a"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook_Subworkflow_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Construct_AI_Prompts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construct_AI_Prompts": {
+      "main": [
+        [
+          {
+            "node": "OpenAI_LLM_Recommendation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI_LLM_Recommendation": {
+      "main": [
+        [
+          {
+            "node": "Parse_AI_Structured_Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse_AI_Structured_Response": {
+      "main": [
+        [
+          {
+            "node": "Trigger_Course_Matcher_Subworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "edbb985c-b9d9-4062-b282-007388b27d8a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7a9cc99d5726897ef3cc1790639fdfd4d5892d7b9a718fc6ac93151f2bb810b"
+  },
+  "nodeGroups": [],
+  "id": "rNiKDoPXvYeeUthh",
+  "tags": []
+}

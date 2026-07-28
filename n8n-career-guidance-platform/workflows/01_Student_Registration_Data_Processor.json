@@ -1,0 +1,250 @@
+{
+  "name": "01_Student_Registration_Data_Processor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "student-career-registration",
+        "options": {}
+      },
+      "name": "Webhook_Student_Input",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "354509d5-acd4-4130-9afc-6ef1ab784eb8",
+      "webhookId": "24605794-e555-4c29-9e83-021e9f06f91d"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Data Validation & Normalization Code\nconst input = $input.first().json.body || $input.first().json;\n\nconst fullName = input.fullName || input['Full Name'] || 'Anonymous Student';\nconst email = input.email || input['Email Address'] || '';\nconst degree = input.degree || input['Current Academic Degree'] || 'Engineering';\nconst targetGoal = input.targetGoal || input['Target Career Goal'] || 'Full-Stack Developer';\nconst currentSkills = input.currentSkills || input['Current Technical Skills'] || 'Basic Programming';\nconst studentId = input.studentId || ('STU-' + Math.floor(100000 + Math.random() * 900000));\n\nif (!email || !email.includes('@')) {\n  throw new Error('Invalid email provided in form payload.');\n}\n\nreturn [{\n  json: {\n    studentId,\n    fullName,\n    email,\n    degree,\n    graduationYear: input.graduationYear || '2026',\n    targetGoal,\n    currentSkills,\n    weeklyTime: input.weeklyTime || '10-20 Hours/week',\n    preferredLanguage: input.preferredLanguage || 'English',\n    status: 'REGISTERED',\n    registeredAt: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Validate_And_Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        112
+      ],
+      "id": "1544446b-f369-4b54-a41a-d174467e82b3"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck",
+          "mode": "list",
+          "cachedResultName": "Student_Career_Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "studentId",
+              "displayName": "studentId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "degree",
+              "displayName": "degree",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "graduationYear",
+              "displayName": "graduationYear",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "targetGoal",
+              "displayName": "targetGoal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "currentSkills",
+              "displayName": "currentSkills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "weeklyTime",
+              "displayName": "weeklyTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "Google_Sheets_DB_Save",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        464,
+        112
+      ],
+      "id": "1849735d-decd-4863-ade4-8975fb72fb98",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "v2p9ahoS6sPT41U7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Audit Log Generator\nconst data = $input.first().json;\nconsole.log(`[AUDIT LOG] Student registered: ${data.fullName} (${data.email}) - Goal: ${data.targetGoal}`);\nreturn [{ json: { ...data, auditStatus: 'SUCCESS_LOGGED' } }];"
+      },
+      "name": "Audit_Logger",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        112
+      ],
+      "id": "7dbe0d8c-f153-49bd-8e39-f5d52d70d59c"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tirth30082006.app.n8n.cloud/webhook/trigger-ai-engine",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "name": "Trigger_AI_Engine_Subworkflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        912,
+        112
+      ],
+      "id": "f56c2732-a01a-4a7c-8235-ba73bf200c47"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook_Student_Input": {
+      "main": [
+        [
+          {
+            "node": "Validate_And_Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate_And_Normalize": {
+      "main": [
+        [
+          {
+            "node": "Google_Sheets_DB_Save",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google_Sheets_DB_Save": {
+      "main": [
+        [
+          {
+            "node": "Audit_Logger",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit_Logger": {
+      "main": [
+        [
+          {
+            "node": "Trigger_AI_Engine_Subworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "451096f7-f264-4b19-813a-de277b5b5ba3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7a9cc99d5726897ef3cc1790639fdfd4d5892d7b9a718fc6ac93151f2bb810b"
+  },
+  "nodeGroups": [],
+  "id": "wUUAEaD5c8kRu0mR",
+  "tags": []
+}

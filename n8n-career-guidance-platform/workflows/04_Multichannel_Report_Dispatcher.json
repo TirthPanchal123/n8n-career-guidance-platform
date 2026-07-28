@@ -1,0 +1,262 @@
+{
+  "name": "04_Multichannel_Report_Dispatcher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-report-dispatcher",
+        "options": {}
+      },
+      "name": "Webhook_Subworkflow_Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9085dbce-0406-4aef-90df-7f262d860a78",
+      "webhookId": "69ad9fce-9b1f-412e-a8a2-f287adfa0aab"
+    },
+    {
+      "parameters": {
+        "jsCode": "const student = $input.first().json.body || $input.first().json;\nconst ai = student.aiAnalysis || {};\nconst courses = student.matchedCourses || [];\nconst internships = student.matchedInternships || [];\n\nconst courseList = courses.map(c => `<li><a href=\"${c.url}\" target=\"_blank\"><strong>${c.title}</strong></a> (${c.platform})</li>`).join('');\nconst internshipList = internships.map(i => `<li><strong>${i.title}</strong> at ${i.company} (${i.location})</li>`).join('');\nconst skillGapList = (ai.skillGap || ['Advanced Software Design', 'Cloud APIs']).map(s => `<li><strong>${s}</strong></li>`).join('');\n\nconst htmlEmail = `<!DOCTYPE html><html><head><style>body{font-family:Arial,sans-serif;background:#f4f6f9;color:#333;margin:0;padding:20px}.card{max-width:650px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,.08)}.header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;padding:30px 25px;text-align:center}.content{padding:25px;line-height:1.6}.box{background:#f8fafc;border-left:4px solid #6366f1;padding:15px;margin:15px 0;border-radius:4px}.footer{background:#f1f5f9;text-align:center;padding:15px;font-size:12px;color:#64748b}</style></head><body><div class=\"card\"><div class=\"header\"><h1 style=\"margin:0\">Your AI Career Roadmap Report</h1><p style=\"margin:5px 0 0;opacity:.9\">Prepared for ${student.fullName}</p></div><div class=\"content\"><p>Dear <strong>${student.fullName}</strong>,</p><p>Our AI Career Engine has analyzed your profile and target goal of <strong>${student.targetGoal}</strong>.</p><div class=\"box\"><h3 style=\"margin-top:0;color:#4f46e5\">Skill Gap Analysis</h3><ul>${skillGapList}</ul></div><h3>4-Week Learning Roadmap</h3><ul><li><strong>Week 1:</strong> ${ai.week1Roadmap || 'Master core foundational concepts.'}</li><li><strong>Week 2:</strong> ${ai.week2Roadmap || 'Build RESTful APIs and data flows.'}</li><li><strong>Week 3:</strong> ${ai.week3Roadmap || 'Implement database and ORM integrations.'}</li><li><strong>Week 4:</strong> ${ai.week4Roadmap || 'Deploy live project to cloud.'}</li></ul><div class=\"box\" style=\"border-color:#10b981;background:#ecfdf5\"><h3 style=\"margin-top:0;color:#059669\">Recommended Capstone Project</h3><p><strong>${ai.topProjectIdea || 'AI Automation Dashboard'}</strong></p></div><h3>Recommended Learning Resources</h3><ul>${courseList}</ul><h3>Matched Internship Roles</h3><ul>${internshipList}</ul></div><div class=\"footer\">AI-Powered Student Career Guidance Platform - n8n Capstone</div></div></body></html>`;\n\nreturn [{\n  json: {\n    ...student,\n    htmlEmail,\n    emailSubject: `Your Personalized AI Career Roadmap - ${student.targetGoal}`\n  }\n}];"
+      },
+      "name": "Build_HTML_Email_Template",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "67349076-f54e-4566-9f39-73f98ed97a46"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }}",
+        "subject": "={{ $json.emailSubject }}",
+        "message": "={{ $json.htmlEmail }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "name": "Gmail_Send_Student_Report",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        480,
+        0
+      ],
+      "id": "5a56dd09-559c-48bf-b37f-a944e8507e36",
+      "webhookId": "e74ad43a-f92b-4028-84f8-4725adff90f1",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "QUnbbsrqWId6eKfq",
+          "name": "Gmail account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck",
+          "mode": "list",
+          "cachedResultName": "Student_Career_Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Students",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "studentId"
+          ],
+          "schema": [
+            {
+              "id": "studentId",
+              "displayName": "studentId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fullName",
+              "displayName": "fullName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "degree",
+              "displayName": "degree",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "graduationYear",
+              "displayName": "graduationYear",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "targetGoal",
+              "displayName": "targetGoal",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "currentSkills",
+              "displayName": "currentSkills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "weeklyTime",
+              "displayName": "weeklyTime",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preferredLanguage",
+              "displayName": "preferredLanguage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "registeredAt",
+              "displayName": "registeredAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "name": "Update_Google_Sheet_Status",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        704,
+        0
+      ],
+      "id": "6ea8047d-74bb-4a31-9b4d-c29ab9693cbb",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "v2p9ahoS6sPT41U7",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook_Subworkflow_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build_HTML_Email_Template",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build_HTML_Email_Template": {
+      "main": [
+        [
+          {
+            "node": "Gmail_Send_Student_Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail_Send_Student_Report": {
+      "main": [
+        [
+          {
+            "node": "Update_Google_Sheet_Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c0b1bf03-2867-4d00-a8dc-eb7ba6fba3f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7a9cc99d5726897ef3cc1790639fdfd4d5892d7b9a718fc6ac93151f2bb810b"
+  },
+  "nodeGroups": [],
+  "id": "waL8tvGlMA8MFiDn",
+  "tags": []
+}

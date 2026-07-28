@@ -1,0 +1,121 @@
+{
+  "name": "03_Automated_Course_Internship_Matcher",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "trigger-course-matcher",
+        "options": {}
+      },
+      "name": "Webhook_Subworkflow_Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2783549c-1f1b-45fa-ac30-b6dd3c2cca85",
+      "webhookId": "a0c92857-9601-4cfa-a86c-c7da7679067a"
+    },
+    {
+      "parameters": {
+        "jsCode": "const student = $input.first().json.body || $input.first().json;\nconst targetGoal = student.targetGoal || 'Full-Stack Web Developer';\n\n// Match curated courses & internship tracks dynamically\nconst resourceDB = {\n  'AI / ML Engineer': {\n    courses: [\n      { title: 'Machine Learning Specialization by Andrew Ng', platform: 'Coursera / DeepLearning.AI', url: 'https://coursera.org' },\n      { title: 'PyTorch & Neural Networks Masterclass', platform: 'Udemy / YouTube FreeCodeCamp', url: 'https://youtube.com' }\n    ],\n    internships: [\n      { title: 'Junior AI/ML Research Intern', company: 'TechAI Labs', location: 'Remote / Hybrid' },\n      { title: 'Data & Computer Vision Trainee', company: 'Innovate Analytics', location: 'Bangalore / Remote' }\n    ]\n  },\n  'Full-Stack Web Developer (Node.js & React)': {\n    courses: [\n      { title: 'Full Stack Open 2026 (React, Node, GraphQL)', platform: 'University of Helsinki', url: 'https://fullstackopen.com' },\n      { title: 'Complete Node.js & React Developer', platform: 'Udemy / FreeCodeCamp', url: 'https://youtube.com' }\n    ],\n    internships: [\n      { title: 'Software Engineering Intern (Frontend/Fullstack)', company: 'CloudScale SaaS', location: 'Remote' },\n      { title: 'Junior Web Developer Trainee', company: 'DigitalCraft Solutions', location: 'Ahmedabad / Hybrid' }\n    ]\n  }\n};\n\nconst defaultTrack = {\n  courses: [\n    { title: 'Mastering Modern Software Engineering & Cloud', platform: 'Coursera / FreeCodeCamp', url: 'https://coursera.org' },\n    { title: 'System Design & Webhook Automations in n8n', platform: 'n8n Academy', url: 'https://academy.n8n.io' }\n  ],\n  internships: [\n    { title: 'Associate Software Developer Intern', company: 'Global Tech Corp', location: 'Remote' },\n    { title: 'Automation & AI Solutions Developer Intern', company: 'Apex Innovations', location: 'Hybrid' }\n  ]\n};\n\nconst matchedTrack = resourceDB[targetGoal] || defaultTrack;\n\nreturn [{\n  json: {\n    ...student,\n    matchedCourses: matchedTrack.courses,\n    matchedInternships: matchedTrack.internships,\n    matchedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Course_And_Internship_Matcher_Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        0
+      ],
+      "id": "2bff6e6c-668f-4879-be41-ba79928a9464"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.matchedCourses.length > 0 }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Verify_Match_Success",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        480,
+        0
+      ],
+      "id": "c6e441d7-395b-4389-b8dd-50612ecc74d1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tirth30082006.app.n8n.cloud/webhook/trigger-report-dispatcher",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}\n",
+        "options": {}
+      },
+      "name": "Trigger_Report_Dispatcher_Subworkflow",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        720,
+        0
+      ],
+      "id": "de12f7d7-0bb0-4c7e-8572-b41ad505d661"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook_Subworkflow_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Course_And_Internship_Matcher_Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Course_And_Internship_Matcher_Logic": {
+      "main": [
+        [
+          {
+            "node": "Verify_Match_Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify_Match_Success": {
+      "main": [
+        [
+          {
+            "node": "Trigger_Report_Dispatcher_Subworkflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "d7ca6720-0de8-4b49-bc93-aaff448d2140",
+  "meta": {
+    "instanceId": "e7a9cc99d5726897ef3cc1790639fdfd4d5892d7b9a718fc6ac93151f2bb810b"
+  },
+  "nodeGroups": [],
+  "id": "nclqjC2wSkyBfCYT",
+  "tags": []
+}

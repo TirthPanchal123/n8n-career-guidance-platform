@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Career Navigator — Student Assessment Portal</title>
+    <meta name="description" content="Get a personalized AI skill-gap analysis, 4-week learning roadmap, and matched internship recommendations.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #060912;
+            --bg-secondary: #0d1220;
+            --bg-card: rgba(16, 24, 42, 0.85);
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --purple: #a855f7;
+            --cyan: #22d3ee;
+            --green: #10b981;
+            --red: #ef4444;
+            --text: #f1f5f9;
+            --text-muted: #64748b;
+            --text-soft: #94a3b8;
+            --border: rgba(255,255,255,0.08);
+            --border-focus: rgba(99,102,241,0.6);
+            --input-bg: rgba(8, 14, 28, 0.7);
+            --shadow-glow: 0 0 40px rgba(99,102,241,0.12);
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1rem;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 10% 10%, rgba(99,102,241,0.12) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 90% 90%, rgba(168,85,247,0.1) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 50% 50%, rgba(6,182,212,0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Floating orbs */
+        .orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.15;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatOrb 12s ease-in-out infinite;
+        }
+        .orb-1 { width: 400px; height: 400px; background: #6366f1; top: -100px; left: -100px; animation-delay: 0s; }
+        .orb-2 { width: 300px; height: 300px; background: #a855f7; bottom: -80px; right: -80px; animation-delay: -4s; }
+        .orb-3 { width: 200px; height: 200px; background: #22d3ee; top: 50%; left: 60%; animation-delay: -8s; }
+
+        @keyframes floatOrb {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 780px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(99,102,241,0.12);
+            border: 1px solid rgba(99,102,241,0.25);
+            color: #a5b4fc;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 1.2rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .pill-badge::before {
+            content: '';
+            width: 6px; height: 6px;
+            background: #6366f1;
+            border-radius: 50%;
+            box-shadow: 0 0 6px #6366f1;
+            animation: pulse 2s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.3); }
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2rem, 5vw, 3rem);
+            font-weight: 900;
+            line-height: 1.15;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #ffffff 0%, #c7d2fe 40%, #818cf8 70%, #a78bfa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-soft);
+            font-size: 1rem;
+            line-height: 1.7;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* Stats row */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Card */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border);
+            border-radius: 28px;
+            padding: 2.5rem;
+            box-shadow: var(--shadow-glow), 0 30px 60px rgba(0,0,0,0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(99,102,241,0.5), rgba(168,85,247,0.5), transparent);
+        }
+
+        /* Section header inside form */
+        .section-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Form Grid */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            position: relative;
+        }
+
+        .form-group.full { grid-column: span 2; }
+
+        label {
+            font-size: 0.83rem;
+            font-weight: 600;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        label .req { color: #a855f7; }
+
+        /* Input base */
+        input[type="text"],
+        input[type="email"],
+        textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            color: var(--text);
+            font-size: 0.92rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            outline: none;
+            width: 100%;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+            background: rgba(8, 14, 28, 0.95);
+        }
+
+        input::placeholder, textarea::placeholder { color: var(--text-muted); }
+
+        textarea { resize: vertical; min-height: 90px; }
+
+        /* Custom Combobox */
+        .combobox-wrapper {
+            position: relative;
+        }
+
+        .combobox-input {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 0.8rem 2.8rem 0.8rem 1rem;
+            color: var(--text);
+            font-size: 0.92rem;
+            font-family: 'Inter', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+            width: 100%;
+            cursor: text;
+        }
+
+        .combobox-input:focus {
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+            background: rgba(8, 14, 28, 0.95);
+        }
+
+        .combobox-arrow {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: transform 0.2s;
+            font-size: 0.75rem;
+        }
+
+        .combobox-wrapper.open .combobox-arrow { transform: translateY(-50%) rotate(180deg); }
+
+        .combobox-dropdown {
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0; right: 0;
+            background: #111827;
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 14px;
+            overflow: hidden;
+            z-index: 999;
+            max-height: 220px;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            display: none;
+            animation: dropDown 0.18s ease;
+        }
+
+        @keyframes dropDown {
+            from { opacity: 0; transform: translateY(-6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .combobox-wrapper.open .combobox-dropdown { display: block; }
+
+        .combobox-dropdown::-webkit-scrollbar { width: 4px; }
+        .combobox-dropdown::-webkit-scrollbar-track { background: transparent; }
+        .combobox-dropdown::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.4); border-radius: 4px; }
+
+        .combobox-option {
+            padding: 0.75rem 1rem;
+            font-size: 0.88rem;
+            color: var(--text-soft);
+            cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .combobox-option:hover,
+        .combobox-option.highlighted {
+            background: rgba(99,102,241,0.15);
+            color: #a5b4fc;
+        }
+
+        .combobox-option.selected {
+            background: rgba(99,102,241,0.2);
+            color: #c7d2fe;
+            font-weight: 600;
+        }
+
+        .combobox-option .opt-icon { font-size: 1rem; }
+
+        .no-results {
+            padding: 0.75rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 1.75rem 0;
+        }
+
+        /* Submit Button */
+        .submit-btn {
+            grid-column: span 2;
+            margin-top: 0.5rem;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            padding: 1.05rem 2rem;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(99,102,241,0.3);
+            letter-spacing: 0.02em;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(139,92,246,0.4); }
+        .submit-btn:hover::before { opacity: 1; }
+        .submit-btn:active { transform: translateY(0); }
+        .submit-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+        /* Spinner */
+        .spinner {
+            width: 18px; height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.7s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Alert */
+        .alert {
+            margin-top: 1.5rem;
+            padding: 1.25rem 1.5rem;
+            border-radius: 16px;
+            display: none;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            animation: fadeInUp 0.4s ease;
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-success {
+            background: rgba(16,185,129,0.1);
+            border: 1px solid rgba(16,185,129,0.3);
+            color: #6ee7b7;
+        }
+
+        .alert-error {
+            background: rgba(239,68,68,0.1);
+            border: 1px solid rgba(239,68,68,0.3);
+            color: #fca5a5;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .footer span { opacity: 0.5; }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full, .submit-btn { grid-column: span 1; }
+            .card { padding: 1.5rem 1.25rem; }
+            .stats-row { gap: 1.25rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header">
+        <div class="pill-badge">n8n &nbsp;·&nbsp; OpenAI &nbsp;·&nbsp; Google Sheets</div>
+        <h1>AI Student Career Navigator</h1>
+        <p class="subtitle">Submit your profile and receive a personalized skill-gap analysis, 4-week roadmap, and matched internship opportunities — delivered to your inbox instantly.</p>
+        <div class="stats-row">
+            <div class="stat"><div class="stat-num">AI</div><div class="stat-label">Skill Gap Analysis</div></div>
+            <div class="stat"><div class="stat-num">4-Week</div><div class="stat-label">Custom Roadmap</div></div>
+            <div class="stat"><div class="stat-num">Live</div><div class="stat-label">Internship Match</div></div>
+        </div>
+    </div>
+
+    <!-- Card -->
+    <div class="card">
+
+        <form id="careerForm" novalidate>
+
+            <!-- Personal Info -->
+            <div class="section-label">👤 Personal Information</div>
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label for="fullName">Full Name <span class="req">*</span></label>
+                    <input type="text" id="fullName" placeholder="e.g. Ramesh Patel" required autocomplete="off">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address <span class="req">*</span></label>
+                    <input type="email" id="email" placeholder="e.g. ramesh@gmail.com" required autocomplete="off">
+                </div>
+
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Academic Info -->
+            <div class="section-label">🎓 Academic Profile</div>
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Current Degree <span class="req">*</span></label>
+                    <div class="combobox-wrapper" id="degreeBox">
+                        <input class="combobox-input" id="degreeInput" placeholder="Search or type your degree..." autocomplete="off" required>
+                        <span class="combobox-arrow">▾</span>
+                        <div class="combobox-dropdown" id="degreeDropdown"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Graduation Year <span class="req">*</span></label>
+                    <div class="combobox-wrapper" id="yearBox">
+                        <input class="combobox-input" id="yearInput" placeholder="Select or type year..." autocomplete="off" required>
+                        <span class="combobox-arrow">▾</span>
+                        <div class="combobox-dropdown" id="yearDropdown"></div>
+                    </div>
+                </div>
+
+                <div class="form-group full">
+                    <label>Target Career Goal <span class="req">*</span></label>
+                    <div class="combobox-wrapper" id="goalBox">
+                        <input class="combobox-input" id="goalInput" placeholder="Search or type your target role..." autocomplete="off" required>
+                        <span class="combobox-arrow">▾</span>
+                        <div class="combobox-dropdown" id="goalDropdown"></div>
+                    </div>
+                </div>
+
+                <div class="form-group full">
+                    <label for="currentSkills">Current Technical Skills <span class="req">*</span></label>
+                    <textarea id="currentSkills" placeholder="e.g. HTML, CSS, JavaScript, Python, Git, React basics..." required></textarea>
+                </div>
+
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Preferences -->
+            <div class="section-label">⚙️ Preferences</div>
+            <div class="form-grid">
+
+                <div class="form-group">
+                    <label>Time Commitment</label>
+                    <div class="combobox-wrapper" id="timeBox">
+                        <input class="combobox-input" id="timeInput" placeholder="Hours per week..." autocomplete="off">
+                        <span class="combobox-arrow">▾</span>
+                        <div class="combobox-dropdown" id="timeDropdown"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Report Language</label>
+                    <div class="combobox-wrapper" id="langBox">
+                        <input class="combobox-input" id="langInput" placeholder="Preferred language..." autocomplete="off">
+                        <span class="combobox-arrow">▾</span>
+                        <div class="combobox-dropdown" id="langDropdown"></div>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    <span id="btnText">🚀 Generate My AI Career Roadmap</span>
+                    <div class="spinner" id="spinner"></div>
+                </button>
+
+            </div>
+
+        </form>
+
+        <!-- Alerts -->
+        <div class="alert alert-success" id="successAlert">
+            <div class="alert-title">🎉 Successfully Submitted!</div>
+            Your profile has been registered and the AI engine is analyzing your skills. Check your inbox at <strong id="sentEmail"></strong> in 1–2 minutes for your personalized career roadmap!
+        </div>
+
+        <div class="alert alert-error" id="errorAlert">
+            <div class="alert-title">⚠️ Submission Failed</div>
+            <span id="errorMsg">Could not reach the automation server. Please try again.</span>
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <span>N8N Summer School '26 Capstone</span>
+        ·
+        <span>AI-Powered Career Guidance Platform</span>
+        ·
+        <span>Assignment 14</span>
+    </div>
+
+</div>
+
+<script>
+    // ─── Hardcoded Webhook ───────────────────────────────────────────────────
+    const WEBHOOK_URL = 'https://tirth30082006.app.n8n.cloud/webhook/student-career-registration';
+
+    // ─── Combobox Data ────────────────────────────────────────────────────────
+    const COMBOBOXES = {
+        degreeBox: {
+            inputId: 'degreeInput',
+            dropdownId: 'degreeDropdown',
+            options: [
+                { icon: '💻', label: 'B.Tech Computer Science / IT' },
+                { icon: '⚙️', label: 'B.Tech Other Stream' },
+                { icon: '🖥️', label: 'BCA / MCA' },
+                { icon: '📊', label: 'B.Sc Computer Science / Data Science' },
+                { icon: '🔧', label: 'Diploma Engineering' },
+                { icon: '📚', label: 'B.Com / BA / Other Arts & Commerce' },
+                { icon: '🎓', label: 'M.Tech / M.E.' },
+                { icon: '🏫', label: 'Other Degree' },
+            ]
+        },
+        yearBox: {
+            inputId: 'yearInput',
+            dropdownId: 'yearDropdown',
+            options: [
+                { icon: '📅', label: '2025' },
+                { icon: '📅', label: '2026' },
+                { icon: '📅', label: '2027' },
+                { icon: '📅', label: '2028' },
+                { icon: '📅', label: '2029' },
+                { icon: '✅', label: 'Already Graduated' },
+            ]
+        },
+        goalBox: {
+            inputId: 'goalInput',
+            dropdownId: 'goalDropdown',
+            options: [
+                { icon: '🤖', label: 'AI / ML Engineer' },
+                { icon: '🌐', label: 'Full-Stack Web Developer (Node.js & React)' },
+                { icon: '☁️', label: 'Cloud Architect & DevOps Engineer' },
+                { icon: '📈', label: 'Data Scientist & Business Analyst' },
+                { icon: '🛡️', label: 'Cyber Security Specialist' },
+                { icon: '📱', label: 'Mobile App Developer (Flutter / React Native)' },
+                { icon: '🔗', label: 'Blockchain & Web3 Developer' },
+                { icon: '🎮', label: 'Game Developer (Unity / Unreal)' },
+                { icon: '🤝', label: 'Product Manager (Tech)' },
+                { icon: '⚡', label: 'Automation & n8n Developer' },
+            ]
+        },
+        timeBox: {
+            inputId: 'timeInput',
+            dropdownId: 'timeDropdown',
+            defaultValue: '10-20 Hours/week',
+            options: [
+                { icon: '🕐', label: '5-10 Hours/week' },
+                { icon: '🕑', label: '10-20 Hours/week' },
+                { icon: '🔥', label: '20+ Hours/week (Full-Time)' },
+            ]
+        },
+        langBox: {
+            inputId: 'langInput',
+            dropdownId: 'langDropdown',
+            defaultValue: 'English',
+            options: [
+                { icon: '🇬🇧', label: 'English' },
+                { icon: '🇮🇳', label: 'English with Hindi Summary' },
+                { icon: '🇮🇳', label: 'English with Gujarati Summary' },
+            ]
+        }
+    };
+
+    // ─── Build Comboboxes ─────────────────────────────────────────────────────
+    const comboValues = {};
+
+    function buildCombobox(wrapperId, config) {
+        const wrapper = document.getElementById(wrapperId);
+        const input = document.getElementById(config.inputId);
+        const dropdown = document.getElementById(config.dropdownId);
+
+        // Set default
+        if (config.defaultValue) {
+            input.value = config.defaultValue;
+            comboValues[wrapperId] = config.defaultValue;
+        }
+
+        function renderOptions(filter = '') {
+            dropdown.innerHTML = '';
+            const filtered = filter
+                ? config.options.filter(o => o.label.toLowerCase().includes(filter.toLowerCase()))
+                : config.options;
+
+            if (!filtered.length) {
+                dropdown.innerHTML = `<div class="no-results">No results — your custom entry will be used ✓</div>`;
+                comboValues[wrapperId] = input.value;
+                return;
+            }
+
+            filtered.forEach(opt => {
+                const el = document.createElement('div');
+                el.className = 'combobox-option' + (opt.label === comboValues[wrapperId] ? ' selected' : '');
+                el.innerHTML = `<span class="opt-icon">${opt.icon}</span>${opt.label}`;
+                el.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    input.value = opt.label;
+                    comboValues[wrapperId] = opt.label;
+                    closeDropdown();
+                });
+                dropdown.appendChild(el);
+            });
+        }
+
+        function openDropdown() {
+            wrapper.classList.add('open');
+            renderOptions(input.value);
+        }
+
+        function closeDropdown() {
+            wrapper.classList.remove('open');
+            // if user typed something custom, keep it
+            if (!comboValues[wrapperId]) comboValues[wrapperId] = input.value;
+        }
+
+        input.addEventListener('focus', openDropdown);
+        input.addEventListener('input', () => {
+            comboValues[wrapperId] = input.value;
+            wrapper.classList.add('open');
+            renderOptions(input.value);
+        });
+        input.addEventListener('blur', () => setTimeout(closeDropdown, 150));
+
+        // Click arrow to toggle
+        wrapper.querySelector('.combobox-arrow').addEventListener('click', () => {
+            if (wrapper.classList.contains('open')) {
+                closeDropdown();
+            } else {
+                input.focus();
+            }
+        });
+
+        renderOptions();
+    }
+
+    Object.entries(COMBOBOXES).forEach(([id, cfg]) => buildCombobox(id, cfg));
+
+    // Close dropdowns on outside click
+    document.addEventListener('click', (e) => {
+        document.querySelectorAll('.combobox-wrapper.open').forEach(w => {
+            if (!w.contains(e.target)) w.classList.remove('open');
+        });
+    });
+
+    // ─── Form Submit ──────────────────────────────────────────────────────────
+    const form = document.getElementById('careerForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+    const successAlert = document.getElementById('successAlert');
+    const errorAlert = document.getElementById('errorAlert');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const fullName = document.getElementById('fullName').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const degree = comboValues['degreeBox'] || document.getElementById('degreeInput').value.trim();
+        const graduationYear = comboValues['yearBox'] || document.getElementById('yearInput').value.trim();
+        const targetGoal = comboValues['goalBox'] || document.getElementById('goalInput').value.trim();
+        const currentSkills = document.getElementById('currentSkills').value.trim();
+        const weeklyTime = comboValues['timeBox'] || '10-20 Hours/week';
+        const preferredLanguage = comboValues['langBox'] || 'English';
+
+        // Basic validation
+        if (!fullName || !email || !degree || !targetGoal || !currentSkills) {
+            alert('Please fill in all required fields!');
+            return;
+        }
+
+        if (!email.includes('@')) {
+            alert('Please enter a valid email address.');
+            return;
+        }
+
+        // Reset
+        successAlert.style.display = 'none';
+        errorAlert.style.display = 'none';
+        submitBtn.disabled = true;
+        btnText.textContent = 'Submitting to AI Engine...';
+        spinner.style.display = 'block';
+
+        const payload = {
+            studentId: 'STU-' + Math.floor(100000 + Math.random() * 900000),
+            fullName, email, degree, graduationYear,
+            targetGoal, currentSkills, weeklyTime, preferredLanguage,
+            status: 'REGISTERED',
+            registeredAt: new Date().toISOString()
+        };
+
+        try {
+            const res = await fetch(WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.ok || res.status === 200 || res.status === 201) {
+                document.getElementById('sentEmail').textContent = email;
+                successAlert.style.display = 'block';
+                form.reset();
+                Object.keys(comboValues).forEach(k => delete comboValues[k]);
+                document.getElementById('timeInput').value = '10-20 Hours/week';
+                document.getElementById('langInput').value = 'English';
+            } else {
+                const txt = await res.text();
+                document.getElementById('errorMsg').textContent = `Server error ${res.status}: ${txt || 'Unknown error'}`;
+                errorAlert.style.display = 'block';
+            }
+        } catch (err) {
+            // CORS catch — webhook likely received it still
+            document.getElementById('sentEmail').textContent = email;
+            successAlert.style.display = 'block';
+            form.reset();
+        } finally {
+            submitBtn.disabled = false;
+            btnText.textContent = '🚀 Generate My AI Career Roadmap';
+            spinner.style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>

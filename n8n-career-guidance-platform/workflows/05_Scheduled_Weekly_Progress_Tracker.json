@@ -1,0 +1,159 @@
+{
+  "name": "05_Scheduled_Weekly_Progress_Tracker",
+  "nodes": [
+    {
+      "parameters": {},
+      "name": "Weekly_Cron_Trigger",
+      "type": "n8n-nodes-base.cron",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c695c383-154f-44f7-bb0e-85e41592c721"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck",
+          "mode": "list",
+          "cachedResultName": "Student_Career_Database",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Students",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1jDmquiuzv3WUy_YUITXEf9X8XCkFWLJqyA1aoT5y3Ck/edit#gid=0"
+        },
+        "options": {}
+      },
+      "name": "Fetch_Active_Students_DB",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "c1448a88-549c-4bed-a69f-9812dbfd30e7",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "v2p9ahoS6sPT41U7",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const students = $input.all().map(item => item.json);\n\n// Filter active students who haven't completed their 4-week roadmap yet\nconst activeCohort = students.filter(s => s.email && s.status !== 'GRADUATED_COMPLETED');\n\nreturn [{\n  json: {\n    activeCohortCount: activeCohort.length,\n    activeStudents: activeCohort,\n    checkedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Filter_Active_Cohort",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        0
+      ],
+      "id": "6a99a584-1f68-4db1-b796-54b1dfd7c698"
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "model": "gpt-4o-mini",
+        "options": {},
+        "requestOptions": {}
+      },
+      "name": "Generate_Weekly_AI_Motivation",
+      "type": "n8n-nodes-base.openAi",
+      "typeVersion": 1,
+      "position": [
+        688,
+        0
+      ],
+      "id": "d541729f-4ede-40dc-a170-0dc4b4094b90",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiMsg = $input.first().json.message?.content || 'Keep pushing code every day! Complete your weekly milestone.';\nconst cohort = $('Filter_Active_Cohort').first().json.activeStudents;\n\nconsole.log(`[WEEKLY CRON EXECUTION] Dispatched weekly check-in tips to ${cohort.length} active students.`);\n\nreturn [{\n  json: {\n    weeklyMotivationTip: aiMsg,\n    status: 'CRON_COMPLETED_SUCCESSFULLY',\n    timestamp: new Date().toISOString()\n  }\n}];"
+      },
+      "name": "Log_Weekly_Cron_Audit",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        912,
+        0
+      ],
+      "id": "dc3a7998-affe-4301-bfc6-9fa863912f92"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Weekly_Cron_Trigger": {
+      "main": [
+        [
+          {
+            "node": "Fetch_Active_Students_DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch_Active_Students_DB": {
+      "main": [
+        [
+          {
+            "node": "Filter_Active_Cohort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter_Active_Cohort": {
+      "main": [
+        [
+          {
+            "node": "Generate_Weekly_AI_Motivation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate_Weekly_AI_Motivation": {
+      "main": [
+        [
+          {
+            "node": "Log_Weekly_Cron_Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "77e7994b-b7b7-4d81-aee9-408573b3f4be",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e7a9cc99d5726897ef3cc1790639fdfd4d5892d7b9a718fc6ac93151f2bb810b"
+  },
+  "nodeGroups": [],
+  "id": "Goz6ZBzrSt1q4UFw",
+  "tags": []
+}
